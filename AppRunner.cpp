@@ -2,9 +2,10 @@
 
 using namespace ferium;
 
-void AppRunner::run(std::string name)
+void AppRunner::run(const char* name)
 {
-    m_window->open(name,"Ferium");
-    //other things?
-    //might have one too many wrappers
+
+    if (m_window->open(name,"Ferium") != VK_SUCCESS) {
+        throw std::runtime_error("failed to create window!");
+    }
 }

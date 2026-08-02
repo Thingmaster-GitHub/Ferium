@@ -1,5 +1,6 @@
 set(render_handler_SRCS
         RenderHandler.cpp
+        Render3D.cpp
 )
 
 find_package (glfw3 REQUIRED)

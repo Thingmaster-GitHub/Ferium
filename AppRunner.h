@@ -2,7 +2,6 @@
 
 #include "window_handler/WindowHandler.h"
 #include <GLFW/glfw3.h>
-#include <iostream>
 //a basic thing intended to run any type of rendering application
 //handles vulkan things
 namespace ferium
@@ -15,7 +14,8 @@ namespace ferium
         AppRunner(WindowHandler* window) : m_window(window){}
 
         //runs the program (wow! :3)
-        void run(std::string name);
+        // @param name - name of the program being ran
+        void run(const char* name);
 
     private:
         WindowHandler* m_window;

@@ -11,6 +11,6 @@ namespace ferium
 
     protected:
 
-        VkInstance initialize() override;
+        void initialize() override;
     };
 }

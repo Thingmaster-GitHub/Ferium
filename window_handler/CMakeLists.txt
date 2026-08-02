@@ -11,4 +11,5 @@ target_link_libraries(window_handler
         PRIVATE
                 glfw
                 vulkan
+                render_handler
 )

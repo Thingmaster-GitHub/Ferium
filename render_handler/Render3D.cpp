@@ -2,7 +2,7 @@
 
 using namespace ferium;
 
-VkInstance Render3D::initialize()
+void Render3D::initialize()
 {
 
 }
