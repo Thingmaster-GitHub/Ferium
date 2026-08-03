@@ -10,6 +10,7 @@ VkResult WindowHandler::open(const char* windowName, const char* engineName)
     glfwInitVulkanLoader(vkGetInstanceProcAddr);
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
     m_window = glfwCreateWindow(640, 480, windowName, NULL, NULL);//TODO make this reasonable (get screen width & height or something)
     glfwSetKeyCallback(m_window, keyCallback);
 

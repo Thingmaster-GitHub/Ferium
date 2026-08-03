@@ -40,17 +40,54 @@ void RenderHandler::createInstance(const char* windowName,const char* engineName
     createInfo.pApplicationInfo = &appInfo;
 
     //glfw things for vulkan
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions;
+    uint32_t extensionCount = 0;
+    const char** extensions;
 
-    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-    createInfo.enabledExtensionCount = glfwExtensionCount;
-    createInfo.ppEnabledExtensionNames = glfwExtensions;
+    extensions = getVulkanExtensions(&extensionCount,glfwGetRequiredInstanceExtensions(&extensionCount));
+
+    //testing
+    uint32_t extensionCountAvailable = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCountAvailable, nullptr);
+
+    std::vector<VkExtensionProperties> extensionsAvailable(extensionCountAvailable);
+
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCountAvailable, extensionsAvailable.data());
+
+    {
+        const char* notFoundName = nullptr;
+
+        if(!findExtensions(&extensionsAvailable,extensions,extensionCount,&notFoundName))
+        {
+            throw std::runtime_error(std::string("failed to find vulkan extension \"") + notFoundName +"\"!");
+        }
+
+    }
+    createInfo.enabledExtensionCount = extensionCount;
+    createInfo.ppEnabledExtensionNames = extensions;
 
     createInfo.enabledLayerCount = 0;
 
+    //TODO check if I need to add anything here for macos/osx compatability
     if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
     }
+}
+const bool RenderHandler::findExtensions(const std::vector< VkExtensionProperties >* extensionsAvailable, const char** extensionsNeeded, const uint32_t extensionsNeededCount, const char** notFoundName)
+{
+
+    for(int i=0;i<extensionsNeededCount;i++)
+    {
+        bool foundCurrent = false;
+        *notFoundName=extensionsNeeded[i];
+        for(int j=0;j<extensionsAvailable->size();j++)
+        {
+            foundCurrent=foundCurrent||(strcmp(extensionsAvailable->at(j).extensionName,*notFoundName)==0);
+        }
+
+        if(!foundCurrent)
+            return false;
+    }
+
+    return true;
 }

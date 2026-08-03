@@ -12,5 +12,7 @@ namespace ferium
     protected:
 
         void initialize() override;
+
+        const char** getVulkanExtensions(uint32_t* extensionCount,const char** glfwExtensions) override;
     };
 }

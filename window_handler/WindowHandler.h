@@ -8,6 +8,7 @@
 
 #include "../render_handler/RenderHandler.h"
 
+//this part of the program references/coppies some things from here: https://www.glfw.org/docs/latest/vulkan_guide.html
 namespace ferium
 {
     class WindowHandler
