@@ -14,5 +14,7 @@ namespace ferium
         void initialize() override;
 
         const char** getVulkanExtensions(uint32_t* extensionCount,const char** glfwExtensions) override;
+        const char ** getValidationLayers(uint32_t * layerCount, const char ** validationLayersInitial) override;
+
     };
 }

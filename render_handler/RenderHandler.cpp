@@ -39,32 +39,11 @@ void RenderHandler::createInstance(const char* windowName,const char* engineName
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
 
-    //glfw things for vulkan
-    uint32_t extensionCount = 0;
-    const char** extensions;
 
-
-    extensions = getVulkanExtensions(&extensionCount,glfwGetRequiredInstanceExtensions(&extensionCount));
-
-    //testing
-    uint32_t extensionCountAvailable = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCountAvailable, nullptr);
-
-    std::vector<VkExtensionProperties> extensionsAvailable(extensionCountAvailable);
-
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCountAvailable, extensionsAvailable.data());
-
-    {
-        const char* notFoundName = nullptr;
-
-        if(!findExtensions(&extensionsAvailable,extensions,extensionCount,&notFoundName))
-        {
-            throw std::runtime_error(std::string("failed to find vulkan extension \"") + notFoundName +"\"!");
-        }
-
-    }
-    createInfo.enabledExtensionCount = extensionCount;
-    createInfo.ppEnabledExtensionNames = extensions;
+    //this will handle extensions
+    checkExtensionSupport(&createInfo);
+    //this will handle the validation layers
+    checkValidationLayerSupport(&createInfo);
 
     createInfo.enabledLayerCount = 0;
 
@@ -90,4 +69,88 @@ const bool RenderHandler::findExtensions(const std::vector< VkExtensionPropertie
     }
 
     return true;
+}
+const bool RenderHandler::findValidationLayers(const std::vector< VkLayerProperties >* layersAvailable, const char** layersNeeded, const uint32_t layersNeededCount, const char** notFoundName)
+{
+
+    for(int i=0;i<layersNeededCount;i++)
+    {
+        bool foundCurrent = false;
+        *notFoundName=layersNeeded[i];
+        for(int j=0;j<layersAvailable->size();j++)
+        {
+            foundCurrent=foundCurrent||(strcmp(layersAvailable->at(j).layerName,*notFoundName)==0);
+            std::cout<<layersAvailable->at(j).layerName<<"\n";
+        }
+
+        if(!foundCurrent)
+            return false;
+    }
+
+    return true;
+}
+void RenderHandler::checkValidationLayerSupport(VkInstanceCreateInfo* createInfo)
+{
+#ifdef NDEBUG
+    const bool enableValidationLayers = false;
+#else
+    const bool enableValidationLayers = true;
+#endif
+    if(enableValidationLayers)
+    {
+        //temporarally defined here to allow for subclass specific behavior, as, unlike with extensions, glfw requests no validation layers
+        const char** validationLayers = (const char**)malloc(1*sizeof(const char*));
+        validationLayers[0]="VK_LAYER_KHRONOS_validation";
+        uint32_t layerCount = 1;
+
+        validationLayers = getValidationLayers(&layerCount,validationLayers);
+
+        uint32_t availablelayerCount;
+
+
+        vkEnumerateInstanceLayerProperties(&availablelayerCount, nullptr);
+        std::vector<VkLayerProperties> availableLayers(availablelayerCount);
+        vkEnumerateInstanceLayerProperties(&availablelayerCount, availableLayers.data());
+
+        const char* notFoundName = nullptr;
+
+        if(!findValidationLayers(&availableLayers,validationLayers,layerCount,&notFoundName))
+        {
+            throw std::runtime_error(std::string("failed to find validation layer \"") + notFoundName +"\"!");
+        }
+
+        createInfo->enabledLayerCount = layerCount;
+        createInfo->ppEnabledLayerNames = validationLayers;
+    }
+    else
+        createInfo->enabledLayerCount = 0;
+
+}
+void RenderHandler::checkExtensionSupport(VkInstanceCreateInfo* createInfo)
+{
+    //glfw things for vulkan
+    uint32_t extensionCount = 0;
+    const char** extensions;
+
+
+    extensions = getVulkanExtensions(&extensionCount,glfwGetRequiredInstanceExtensions(&extensionCount));
+
+    uint32_t extensionCountAvailable = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCountAvailable, nullptr);
+
+    std::vector<VkExtensionProperties> extensionsAvailable(extensionCountAvailable);
+
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCountAvailable, extensionsAvailable.data());
+
+    //defined here as to make using findExtensions simpler
+    const char* notFoundName = nullptr;
+
+    if(!findExtensions(&extensionsAvailable,extensions,extensionCount,&notFoundName))
+    {
+        throw std::runtime_error(std::string("failed to find vulkan extension \"") + notFoundName +"\"!");
+    }
+
+    createInfo->enabledExtensionCount = extensionCount;
+    createInfo->ppEnabledExtensionNames = extensions;
+
 }

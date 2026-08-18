@@ -24,3 +24,19 @@ const char** Render3D::getVulkanExtensions(uint32_t* extensionCount,const char**
     output[glfwCount]="VK_KHR_get_surface_capabilities2";
     return output;
 }
+const char** Render3D::getValidationLayers(uint32_t * layerCount, const char ** validationLayersInitial)
+{
+    uint32_t initialCount = *layerCount;
+
+    (*layerCount)++;
+
+    const char** output = (const char**)malloc((*layerCount) * sizeof(const char*));
+
+    for(int i=0;i<initialCount;i++)
+    {
+        output[i]=validationLayersInitial[i];
+    }
+
+    output[initialCount]="VK_LAYER_MESA_overlay";
+    return output;
+}
