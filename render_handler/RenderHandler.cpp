@@ -135,6 +135,9 @@ void RenderHandler::checkExtensionSupport(VkInstanceCreateInfo* createInfo)
 
     extensions = getVulkanExtensions(&extensionCount,glfwGetRequiredInstanceExtensions(&extensionCount));
 
+#ifdef DEBUG
+    extensions= append(extensions,extensionCount,"VK_EXT_debug_utils")
+#endif
     uint32_t extensionCountAvailable = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCountAvailable, nullptr);
 
@@ -153,4 +156,21 @@ void RenderHandler::checkExtensionSupport(VkInstanceCreateInfo* createInfo)
     createInfo->enabledExtensionCount = extensionCount;
     createInfo->ppEnabledExtensionNames = extensions;
 
+}
+const char** RenderHandler::append(const char** array,uint32_t* size, const char* data)
+{
+    //using this might be a bit inefficient, but it's only used for intialization so whatever
+    uint32_t initialSize = *size;
+
+    (*size)++;
+
+    const char** output = (const char**)malloc((*size) * sizeof(const char*));
+
+    for(int i=0;i<initialSize;i++)
+    {
+        output[i]=array[i];
+    }
+
+    output[initialSize]=data;
+    return output;
 }

@@ -23,6 +23,9 @@ namespace ferium
         virtual const char** getValidationLayers(uint32_t* layerCount,const char **validationLayersInitial) = 0;
         VkInstance m_instance;
 
+        //appends the given data to the const char ** array and increases *size by one
+        //returns the modified list
+        const char** append(const char** array,uint32_t* size, const char* data);
     private:
         void createInstance(const char* windowName,const char* engineName);
         //a simple function to verify that all needed extensions are found
