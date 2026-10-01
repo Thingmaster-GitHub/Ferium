@@ -4,7 +4,7 @@ using namespace ferium;
 
 VkResult RenderHandler::start(GLFWwindow* window,const char* windowName, const char* engineName)
 {
-    VkSurfaceKHR surface;
+
 
     createInstance(windowName,engineName);
     setupDebugMessenger();
@@ -12,19 +12,24 @@ VkResult RenderHandler::start(GLFWwindow* window,const char* windowName, const c
     //might move this maybe
     initialize();
     pickPhysicalDevice();
-
-    VkResult err = glfwCreateWindowSurface(m_instance, window, NULL, &surface);
+    createLogicalDevice();
+    VkResult err = glfwCreateWindowSurface(m_instance, window, NULL, &m_surface);
 
     return err;
 }
 void RenderHandler::end()
 {
+    vkDestroyDevice(m_device,nullptr);
 #ifdef NDEBUG
 #else
 
     DestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
 #endif
+
+    vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
     vkDestroyInstance(m_instance, nullptr);
+
+
 
 }
 void RenderHandler::createInstance(const char* windowName,const char* engineName)
@@ -53,11 +58,11 @@ void RenderHandler::createInstance(const char* windowName,const char* engineName
 #else
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
     //this will handle the validation layers
-    checkValidationLayerSupport(&createInfo,&debugCreateInfo);
+    initValidationLayers(&createInfo,&debugCreateInfo);
 
 #endif
     //this will handle extensions
-    checkExtensionSupport(&createInfo);
+    initExtensions(&createInfo);
 
 
     createInfo.enabledLayerCount = 0;
@@ -103,13 +108,15 @@ const bool RenderHandler::findValidationLayers(const std::vector< VkLayerPropert
 
     return true;
 }
-void RenderHandler::checkValidationLayerSupport(VkInstanceCreateInfo* createInfo,VkDebugUtilsMessengerCreateInfoEXT* debugCreateInfo)
+void RenderHandler::initValidationLayers(VkInstanceCreateInfo* createInfo,VkDebugUtilsMessengerCreateInfoEXT* debugCreateInfo)
 {
 #ifdef NDEBUG
 
     createInfo->enabledLayerCount = 0;
 #else
     //temporarally defined here to allow for subclass specific behavior, as, unlike with extensions, glfw requests no validation layers
+
+    //TODO clean up passing member variables to functions unnecescarally
     const char** validationLayers = (const char**)malloc(1*sizeof(const char*));
     validationLayers[0]="VK_LAYER_KHRONOS_validation";
     uint32_t layerCount = 1;
@@ -141,7 +148,7 @@ void RenderHandler::checkValidationLayerSupport(VkInstanceCreateInfo* createInfo
 #endif
 
 }
-void RenderHandler::checkExtensionSupport(VkInstanceCreateInfo* createInfo)
+void RenderHandler::initExtensions(VkInstanceCreateInfo* createInfo)
 {
     //glfw things for vulkan
     uint32_t extensionCount = 0;
@@ -268,8 +275,62 @@ void RenderHandler::pickPhysicalDevice()
 }
 bool RenderHandler::isDeviceSuitable(VkPhysicalDevice device)
 {
-    //TODO add some reasonable stuff here, and probably some subclass specific behavior
-    //all of my devices have only 1 gpu/igpu, so I have almost no way of testing this
-    //for now, just having vulkan support should be enough
-    return true;
+    findQueueFamilies(device);
+    //the QueueHandler has been initialized, and can be used to see if device is suitable
+    return m_queueHandler.foundQueues();
+}
+void RenderHandler::findQueueFamilies(VkPhysicalDevice device)
+{
+    //used for both physical and logical device creation
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+    VkQueueFamilyProperties* queueFamilies = (VkQueueFamilyProperties*)malloc((queueFamilyCount) * sizeof(VkQueueFamilyProperties));
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,queueFamilies);
+
+
+    //should use this here for simplicity
+    std::vector<uint32_t> presentSupportIndicies;
+    for(uint32_t i=0;i<queueFamilyCount;i++)
+    {
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_surface, &presentSupport);
+        if(presentSupport)
+        {
+            presentSupportIndicies.push_back(i);
+        }
+    }
+    //TODO finish this!
+}
+void RenderHandler::createLogicalDevice()
+{
+    findQueueFamilies(m_physicalDevice);
+
+    VkDeviceQueueCreateInfo queueCreateInfo{};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = *indices.graphicsFamily;
+    queueCreateInfo.queueCount = 1;
+
+    float queuePriority = 1.0f;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    VkPhysicalDeviceFeatures deviceFeatures{};
+
+    VkDeviceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+    //so much information to manage with this
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.queueCreateInfoCount = 1;
+
+    createInfo.pEnabledFeatures = &deviceFeatures;
+
+    createInfo.enabledExtensionCount=0;//doing stuff with this later apparently
+
+
+    if (vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &m_device) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create logical device!");
+    }
+
+    vkGetDeviceQueue(m_device, *indices.graphicsFamily, 0, &m_graphicsQueue);
 }
