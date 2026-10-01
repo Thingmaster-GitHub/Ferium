@@ -42,7 +42,7 @@ namespace ferium
         VkQueue m_graphicsQueue;
         VkSurfaceKHR m_surface;
         VkQueue m_presentQueue;
-        QueueHandler m_queueHamburger;
+        QueueHandler m_queueHandler;
     private:
         //gets required queue families and initializes the QueueHandler
         void findQueueFamilies(VkPhysicalDevice device);
