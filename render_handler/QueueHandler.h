@@ -34,6 +34,7 @@ namespace ferium
 
         bool foundQueues();
 
+        //TODO impliment binary search for unflaged indicies
     private:
         void calculateOptimal();
 

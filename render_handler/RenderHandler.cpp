@@ -187,7 +187,7 @@ const char** RenderHandler::append(const char** array,uint32_t* size, const char
 
     (*size)++;
 
-    const char** output = (const char**)malloc((*size) * sizeof(const char*));
+    const char** output = new const char*[*size];//TODO check if this works
 
     for(int i=0;i<initialSize;i++)
     {
@@ -277,7 +277,7 @@ bool RenderHandler::isDeviceSuitable(VkPhysicalDevice device)
 {
     findQueueFamilies(device);
     //the QueueHandler has been initialized, and can be used to see if device is suitable
-    return m_queueHandler.foundQueues();
+    //return m_queueHandler.foundQueues();
 }
 void RenderHandler::findQueueFamilies(VkPhysicalDevice device)
 {
@@ -306,9 +306,10 @@ void RenderHandler::createLogicalDevice()
 {
     findQueueFamilies(m_physicalDevice);
 
+    //TODO integrate the QueueHandler
     VkDeviceQueueCreateInfo queueCreateInfo{};
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = *indices.graphicsFamily;
+    //queueCreateInfo.queueFamilyIndex = *indices.graphicsFamily;
     queueCreateInfo.queueCount = 1;
 
     float queuePriority = 1.0f;
@@ -332,5 +333,5 @@ void RenderHandler::createLogicalDevice()
         throw std::runtime_error("failed to create logical device!");
     }
 
-    vkGetDeviceQueue(m_device, *indices.graphicsFamily, 0, &m_graphicsQueue);
+    //vkGetDeviceQueue(m_device, *indices.graphicsFamily, 0, &m_graphicsQueue);
 }
