@@ -43,6 +43,8 @@ namespace ferium
         VkSurfaceKHR m_surface;
         VkQueue m_presentQueue;
         QueueHandler m_queueHandler;
+        //called somewhere which allows a subclass to initialize some queues
+        virtual void initQueues()=0;
     private:
         //gets required queue families and initializes the QueueHandler
         void findQueueFamilies(VkPhysicalDevice device);

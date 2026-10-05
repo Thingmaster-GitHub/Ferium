@@ -11,9 +11,10 @@ VkResult RenderHandler::start(GLFWwindow* window,const char* windowName, const c
     //initialize subclass specific behavior
     //might move this maybe
     initialize();
+    VkResult err = glfwCreateWindowSurface(m_instance, window, NULL, &m_surface);
     pickPhysicalDevice();
     createLogicalDevice();
-    VkResult err = glfwCreateWindowSurface(m_instance, window, NULL, &m_surface);
+
 
     return err;
 }
@@ -254,7 +255,7 @@ void RenderHandler::pickPhysicalDevice()
 {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
-    VkPhysicalDevice* devices = (VkPhysicalDevice*)malloc((deviceCount) * sizeof(VkPhysicalDevice));
+    VkPhysicalDevice* devices = new VkPhysicalDevice[deviceCount];
     vkEnumeratePhysicalDevices(m_instance, &deviceCount, devices);
 
     if (deviceCount == 0) {
@@ -277,7 +278,7 @@ bool RenderHandler::isDeviceSuitable(VkPhysicalDevice device)
 {
     findQueueFamilies(device);
     //the QueueHandler has been initialized, and can be used to see if device is suitable
-    //return m_queueHandler.foundQueues();
+    return m_queueHandler.foundQueues();
 }
 void RenderHandler::findQueueFamilies(VkPhysicalDevice device)
 {
@@ -285,7 +286,7 @@ void RenderHandler::findQueueFamilies(VkPhysicalDevice device)
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
-    VkQueueFamilyProperties* queueFamilies = (VkQueueFamilyProperties*)malloc((queueFamilyCount) * sizeof(VkQueueFamilyProperties));
+    VkQueueFamilyProperties* queueFamilies = new VkQueueFamilyProperties[queueFamilyCount];
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,queueFamilies);
 
 
@@ -300,6 +301,15 @@ void RenderHandler::findQueueFamilies(VkPhysicalDevice device)
             presentSupportIndicies.push_back(i);
         }
     }
+
+    m_queueHandler = QueueHandler(queueFamilies,queueFamilyCount);
+
+    m_queueHandler.addRequirement(presentSupportIndicies.data(),presentSupportIndicies.size(),"present family",true);
+    m_queueHandler.addRequirement(VK_QUEUE_GRAPHICS_BIT,"graphics family",true);
+
+    initQueues();
+
+    m_queueHandler.calculateOptimal();
     //TODO finish this!
 }
 void RenderHandler::createLogicalDevice()

@@ -20,3 +20,7 @@ const char** Render3D::getValidationLayers(uint32_t * layerCount, const char ** 
     //this function does not currently do anything
     return validationLayersInitial;
 }
+void Render3D::initQueues()
+{
+
+}
