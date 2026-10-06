@@ -15,16 +15,16 @@ bool QueueHandler::foundQueues()
 
     for(int i=0;i<m_requirements.size();i++)
     {
-        finished = (m_requirements.at(i).needed&&!m_requirements.at(i).index)   ||  !m_requirements.at(i).needed;
+        finished = (m_requirements.at(i).needed&&m_requirements.at(i).index)   ||  !m_requirements.at(i).needed;//broken?
     }
 
     return finished;
-
 }
 void QueueHandler::addRequirement(uint32_t* indices,uint32_t size,const char* name, bool needed)
 {
     queueIndiciesContainer tmp;
 
+    tmp.index=nullptr;
     tmp.needed=needed;
     tmp.hasBitFlag=false;
 
@@ -37,6 +37,7 @@ void QueueHandler::addRequirement(uint32_t* indices,uint32_t size,const char* na
 void QueueHandler::addRequirement(VkQueueFlagBits bits,const char* name, bool needed)
 {
     queueIndiciesContainer tmp;
+    tmp.index=nullptr;
     tmp.needed=needed;
     tmp.hasBitFlag=true;
     tmp.bitFlag=bits;
@@ -50,8 +51,9 @@ void QueueHandler::calculateOptimal(uint32_t effort)
     //this garbage laptop only has 1 queue family :(
 
     //TODO figure out how to test this!
-    uint32_t* indicesTally = new uint32_t[m_queueFamilyCount];
-    for(uint32_t count=0;count<effort-1;count++)//not using i, as this is not used as an index
+    uint32_t* indicesTally = new uint32_t[m_queueFamilyCount]();
+
+    for(uint32_t count=0;count<effort;count++)//not using i, as this is not used as an index
     {
         for(auto& requirement:m_requirements)
         {
