@@ -309,7 +309,7 @@ void RenderHandler::findQueueFamilies(VkPhysicalDevice device)
 
     initQueues();
 
-    m_queueHandler.calculateOptimal();
+    m_queueHandler.calculateOptimal(2);
     //TODO finish this!
 }
 void RenderHandler::createLogicalDevice()

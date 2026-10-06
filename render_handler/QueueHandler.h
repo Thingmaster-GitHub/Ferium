@@ -18,7 +18,7 @@ namespace ferium
 
         const char* name;//plaintext name, allows for non-bit flag queue features to be searched for
         const uint32_t* size;
-        const uint32_t* unflagedIndicies;
+        const uint32_t* unflagedIndices;
     };
 
     //this will just search for the index with the most requested feautures
@@ -32,7 +32,7 @@ namespace ferium
         //adds a flaged queue reqirement, with, in this case, an optional name
         void addRequirement(VkQueueFlagBits bits,const char* name, bool needed);
         //adds an unflaged queue requrement, with a manditory field for a name
-        void addRequirement(uint32_t* indicies,uint32_t size,const char* name, bool needed);
+        void addRequirement(uint32_t* indices,uint32_t size,const char* name, bool needed);
         //returns the index assigned to the queue with the givin bits
         uint32_t* getQueue(VkQueueFlagBits bits);
         //returns the index assigned to the queue with the givin name
@@ -40,11 +40,13 @@ namespace ferium
 
         bool foundQueues();
 
-        //calculates a set of indicies which follow all requirements with the minimal amount of indicies chosen
-        void calculateOptimal();
-        //TODO impliment binary search for unflaged indicies
+        //calculates a set of indices which follow all requirements with the minimal amount of indices chosen
+        //effort - number of times to loop through, recomended is 2
+        void calculateOptimal(uint32_t effort);
     private:
-        //stores all queue requirements and their found optimal indicies
+        //if the given requirement is fulfilled by the queue family at the given index
+        bool contains(queueIndiciesContainer requirement,uint32_t queueFamilyIndex);
+        //stores all queue requirements and their found optimal indices
         std::vector<queueIndiciesContainer> m_requirements;
 
         VkQueueFamilyProperties* m_queueFamilies;

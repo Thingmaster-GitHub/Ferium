@@ -19,8 +19,9 @@ bool QueueHandler::foundQueues()
     }
 
     return finished;
+
 }
-void QueueHandler::addRequirement(uint32_t* indicies,uint32_t size,const char* name, bool needed)
+void QueueHandler::addRequirement(uint32_t* indices,uint32_t size,const char* name, bool needed)
 {
     queueIndiciesContainer tmp;
 
@@ -29,7 +30,7 @@ void QueueHandler::addRequirement(uint32_t* indicies,uint32_t size,const char* n
 
     tmp.name=name;
     tmp.size=&size;
-    tmp.unflagedIndicies=indicies;
+    tmp.unflagedIndices=indices;
 
     m_requirements.push_back(tmp);
 };
@@ -43,7 +44,56 @@ void QueueHandler::addRequirement(VkQueueFlagBits bits,const char* name, bool ne
 
     m_requirements.push_back(tmp);
 }
-void QueueHandler::calculateOptimal()
+void QueueHandler::calculateOptimal(uint32_t effort)
+{
+    //annoyingly, I have no way of testing this
+    //this garbage laptop only has 1 queue family :(
+
+    //TODO figure out how to test this!
+    uint32_t* indicesTally = new uint32_t[m_queueFamilyCount];
+    for(uint32_t count=0;count<effort-1;count++)//not using i, as this is not used as an index
+    {
+        for(auto& requirement:m_requirements)
+        {
+            //unfortunatly I do need the index of this for some things :(
+            for(uint32_t i=0;i<m_queueFamilyCount;i++)//i - queue family index
+            {
+                //if the index is not defined and it the queue family contains it
+                if(contains(requirement,i))
+                {
+                    if(!requirement.index)
+                    {
+                        requirement.index=&i;
+                        indicesTally[i]++;
+                    }
+                    else if(indicesTally[*requirement.index]-1<indicesTally[i])
+                    {
+                        indicesTally[*requirement.index]--;
+
+                        requirement.index=&i;
+
+                        indicesTally[i]++;
+                    }
+                }
+            }
+        }
+    }
+}
+bool QueueHandler::contains(queueIndiciesContainer requirement,uint32_t queueFamilyIndex)
 {
 
+    if(requirement.hasBitFlag)
+    {
+        return m_queueFamilies[queueFamilyIndex].queueFlags& requirement.bitFlag;
+    }
+    else
+    {
+        for(int i=0;i<*requirement.size;i++)
+        {
+            if(requirement.unflagedIndices[i]==queueFamilyIndex)
+                return true;
+        }
+        return false;
+    }
 }
+
